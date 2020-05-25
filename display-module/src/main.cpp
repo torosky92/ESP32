@@ -29,6 +29,8 @@ void callback(char* topic, byte* message, unsigned int length) {
   quantity = parsed["quantity"];
   discount = parsed["discount"];
   description = parsed["description"];
+  value = Read_Inf.writeJson(product,ref,price,expiration,quantity,discount,description);
+  Memory.writeFile(SD, "data", value);
 }
 
 void setup() {
@@ -49,11 +51,15 @@ void setup() {
 
   while (!client.connected()) {
     Serial.println("Conectando a Broquer MQTT...");
-    if (client.connect("IOT-ESP32", mqttUser, mqttPassword )) {
+    if (client.connect("IOT-ESP32", mqtt_User, mqtt_Password)) {
       Serial.println("conectado");
     }
   }
   client.subscribe("DISPLAY/A");
+  data = Memory.readFile(SD, "data");
+  StaticJsonBuffer<400> JSONBuffer2;                     //Memory pool
+  JsonObject& parsed = JSONBuffer2.parseObject(data); //Parse message
+  quantity = parsed["quantity"];
   display.Conection(true);
   delay(500);
   tini=millis();
@@ -66,82 +72,62 @@ void loop() {
   trel2=tact-tini2;
 
   data = Memory.readFile(SD, "data");
-  Serial.println(data);
-  /*
-  inf = Read_Inf.readJson(data,0);
-  
-  inf2 = Read_Inf.readJson(data,1);
-  inf3 = Read_Inf.readJson(data,2);
-  inf4 = Read_Inf.readJson(data,3);
-  inf5 = Read_Inf.readJson(data,4);
-  inf6 = Read_Inf.readJson(data,5);
-  inf7 = Read_Inf.readJson(data,6);
 
-  idnew = inf2.toInt();
-  pricenew = inf3.toFloat();
-  quantitynew = inf5.toInt();
-  discountsnew = inf6.toFloat();
-  */
+  StaticJsonBuffer<400> JSONBuffer2;                     //Memory pool
+  JsonObject& parsed = JSONBuffer2.parseObject(data); //Parse message
+  
+  const char * memory_Pro = parsed["name"];           //Get sensor type value
+  int idnew = parsed["product_id"]; //Get sensor type value
+  float pricenew = parsed["price"];
+  const char * expirations = parsed["expiration"];
+  int quantitynew = parsed["quantity"];
+  float discountsnew = parsed["discount"];
+  const char * descriptions = parsed["description"];
+  
   if(trel2<10000){
-    display.template1(inf,pricenew,inf4);
+    display.template1(memory_Pro,pricenew,expirations);
   }
   else if(trel2<20000 && trel2>=10000){
-    display.template2(inf, quantitynew, idnew);
+    display.template2(memory_Pro, quantitynew, idnew);
   }
   else if(trel2<30000 && trel2>=20000){
-    display.template3(inf, discountsnew, inf7);
+    display.template3(memory_Pro, discountsnew, descriptions);
   }
   else{
     tini2=millis();
   }
-  
-  if(trel>=1000){
-    StaticJsonBuffer<300> JSONbuffer;
-    JsonObject& JSONencoder = JSONbuffer.createObject();
-
-    if(product != memory_Pro){
-      memory_Pro=product;
-      JSONencoder["name"] = product;
-      JSONencoder["quantity"] = quantity;
-      value = Read_Inf.writeJson(product,ref,price,expiration,quantity,discount,description);
-      //Memory.writeFile(SD, "data", value);
-      char JSONmessageBuffer[100];
-      JSONencoder.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-      if (client.publish("esp/test", JSONmessageBuffer) == true) {
-        Serial.println("Success sending message");
-      } else {
-        Serial.println("Error sending message");
+  if(digitalRead(SENSOR)==HIGH){
+    if (quantity <= quantitynew){
+      if(quantitynew>0){
+        quantitynew=quantitynew-1;
       }
+      quantity=quantitynew;
+      Serial.println(quantitynew);
     }
     else{
-      if (quantity != quantitynew){
-        value = Read_Inf.writeJson(product,ref,price,expiration,quantitynew,discount,description);
-        JSONencoder["quantity"] = quantitynew;
+      if(quantity>0){
+        quantity=quantity-1;
       }
-      else{
-        JSONencoder["quantity"] = quantity;
-        value = Read_Inf.writeJson(product,ref,price,expiration,quantity,discount,description);
-      }
-      //Memory.writeFile(SD, "data", value);
-      
-      char JSONmessageBuffer[100];
-      JSONencoder.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-      if (client.publish("esp/test", JSONmessageBuffer) == true) {
-        Serial.println("Success sending message");
-      } else {
-        Serial.println("Error sending message");
-      }
-    }
-    client.loop();
-    if(digitalRead(SENSOR)==HIGH){
-    data = Memory.readFile(SD, "data");
-    inf = Read_Inf.readJson(data,4);
-    quantitynew = inf.toInt();
-    if(quantitynew>0){
-      quantitynew=quantitynew-1;
     }
     delay(1000);
+  }
+  if(trel>=5000){
+    StaticJsonBuffer<300> JSONbuffer;
+    JsonObject& JSONencoder = JSONbuffer.createObject();
+    char JSONmessageBuffer[100];
+    JSONencoder["name"] = memory_Pro;
+    JSONencoder["quantity"] = quantity;
+    value = Read_Inf.writeJson(memory_Pro,idnew,pricenew,expirations,quantity,discountsnew,descriptions);
+    Serial.println(value);
+    Memory.writeFile(SD, "data", value);
+    
+    JSONencoder.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+    if (client.publish("esp/test", JSONmessageBuffer) == true) {
+      Serial.println("Success sending message");
+    } else {
+      Serial.println("Error sending message");
     }
+    client.loop();
     Serial.println("-------------");
     tini=millis();
   }

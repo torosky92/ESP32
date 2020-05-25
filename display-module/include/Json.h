@@ -65,7 +65,7 @@ char* Json::writeJsonMqtt(const char * product, int quantity){
     JsonObject& JSONencoder = JSONbuffer.createObject();
     JSONencoder["name"] = product;
     JSONencoder["quantity"] = quantity;
-    char JSONmessageBuffer[100];
+    char JSONmessageBuffer[300];
     JSONencoder.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
     return JSONmessageBuffer;
 }

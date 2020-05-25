@@ -3,7 +3,6 @@
 #include <SD.h>
 #include <FS.h>
 
-
 class MicroSD {
   public:
     MicroSD();

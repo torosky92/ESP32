@@ -9,12 +9,12 @@
 //PIN Indicador
 #define LED 13
 
-const char* ssid = ""; //Nombre de red
-const char* password =  ""; // Contraseña de red
-const char* mqttServer = ""; // Direccion donde se ubica el mqtt del broker
-const int mqttPort = 8080; // Puerto del Mqtt del broker
-const char* mqttUser = ""; //Nombre del Usuario del broker
-const char* mqttPassword = ""; //Clave del usuario del broker
+const char* ssid = "Redmi"; //Nombre de red
+const char* password =  "6b32ad6dac12"; // Contraseña de red
+const char* mqttServer = "tailor.cloudmqtt.com"; // Direccion donde se ubica el mqtt del broker
+const int mqttPort = 18091; // Puerto del Mqtt del broker
+const char* mqtt_User = "zbtbveka"; //Nombre del Usuario del broker
+const char* mqtt_Password = "3QAhOmlBfa90"; //Clave del usuario del broker
 
 const char * product;           
 int ref; 
@@ -39,12 +39,7 @@ String inf5;
 String inf6;
 String inf7;
 
-char name;
 String value;
-int idnew;
-float pricenew;
-float discountsnew;
-int quantitynew;
 
 String data;
 
